@@ -1,10 +1,13 @@
 """Join a dataset to a cohort with task labels."""
 
-from .base_class import PT_DATA_T, BATCH_DATA_T, ESDSTransformationFntr
+from pathlib import Path
 
-import polars as pl, pandas as pd
 import numpy as np
-import pathlib as Path
+import pandas as pd
+import polars as pl
+
+from .base_class import BATCH_T, PT_DATA_T, ESDSTransformationFntr
+
 
 class JoinCohortFntr(ESDSTransformationFntr):
     """Join a dataset to a cohort with task labels."""
@@ -43,7 +46,7 @@ class JoinCohortFntr(ESDSTransformationFntr):
 
         self.label_columns = sorted(list(set(self.cohort_df.columns) - {"patient_id", "end_time"}))
 
-    def __transform_patient__(self, patient: PT_DATA_T) -> BATCH_DATA_T:
+    def __transform_patient__(self, patient: PT_DATA_T) -> BATCH_T:
         """Join the patient to the cohort dataframe."""
 
         cohort_rows = (
@@ -52,7 +55,7 @@ class JoinCohortFntr(ESDSTransformationFntr):
 
         out_batch = {k: [] for k in (list(patient.keys()) + self.label_columns)}
 
-        static_keys = set(batch.keys()) - self.DYNAMIC_KEYS
+        static_keys = set(patient.keys()) - self.DYNAMIC_KEYS
 
         timestamps = np.array([e["time"] for e in patient["events"]])
 
@@ -63,7 +66,7 @@ class JoinCohortFntr(ESDSTransformationFntr):
             for k in self.label_columns:
                 out_batch[k].append(row[k])
 
-            end_idx = np.searchsorted(timestamps, row["end_time"], side='right')
+            end_idx = np.searchsorted(timestamps, row["end_time"], side="right")
 
             for k in self.DYNAMIC_KEYS:
                 out_batch[k].append(patient[k][:end_idx])

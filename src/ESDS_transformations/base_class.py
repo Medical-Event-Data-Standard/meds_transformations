@@ -1,18 +1,12 @@
 """A base class underwriting other ESDS transformation functions."""
 
-import polars as pl
-import pandas as pd
-
-from typing import Any, Callable
-import numpy as np
-from enum import auto
-from tqdm.auto import tqdm
-import itertools
-from collections import defaultdict
 from abc import ABC, abstractmethod
+from collections import defaultdict
+from typing import Any
 
 PT_DATA_T = dict[str, Any]
 BATCH_T = dict[str, list[PT_DATA_T]]
+
 
 class ESDSTransformationFntr(ABC):
     """Base class for ESDS transformation functions."""
