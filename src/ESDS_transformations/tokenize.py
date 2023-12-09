@@ -28,6 +28,3 @@ class TokenizeFntr(ESDSTransformationFntr):
         for e in patient["events"]:
             e["measurements"] = self.tokenize_measurements(e["measurements"])
         return [patient]
-
-
-
