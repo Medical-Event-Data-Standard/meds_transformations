@@ -23,11 +23,11 @@ class NormalizeFntr(ESDSTransformationFntr):
     def normalize_measurement(self, meas: dict[str, Any]) -> dict[str, Any]:
         """Normalize a single measurement."""
         code = meas["code"]
-        value = meas["value"]
+        value = meas["numeric_value"]
         if code not in self.norm_params or value is None or value is np.nan:
             return meas
         mean, std = self.norm_params[code]
-        meas["value"] = (value - mean) / std
+        meas["numeric_value"] = (value - mean) / std
         return meas
 
     def __transform_patient__(self, patient: PT_DATA_T) -> BATCH_T:
