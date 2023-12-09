@@ -13,7 +13,7 @@ class SampleStrategy(Enum):
 from .base_class import BATCH_T, PT_DATA_T, ESDSTransformationFntr
 
 
-class SubsampleSequenceFntr(ESDSTransformationFntr):
+class SampleSubsequencesFntr(ESDSTransformationFntr):
     def __init__(
         self,
         max_seq_len: int = 256,
