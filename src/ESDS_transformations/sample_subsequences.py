@@ -1,13 +1,4 @@
-from enum import Enum
-
 import numpy as np
-
-
-class SampleStrategy(Enum):
-    EVEN = "even"
-    RANDOM = "random"
-    FROM_START = "from_start"
-    TO_END = "to_end"
 
 
 from .base_class import BATCH_T, PT_DATA_T, ESDSTransformationFntr
@@ -18,22 +9,22 @@ class SampleSubsequencesFntr(ESDSTransformationFntr):
         self,
         max_seq_len: int = 256,
         n_samples_per_patient: int = 1,  # Should be set to approximately avg(pt_seq_len/max_seq_len)
-        sample_strategy: SampleStrategy = SampleStrategy.RANDOM,
+        sample_strategy: str = "to_end",
     ):
         self.max_seq_len = max_seq_len
-        match sample_strategy:
-            case SampleStrategy.EVEN:
+        match sample_strategy.lower():
+            case "even":
 
                 def sample_fn(max_valid_st_idx: int) -> list[int]:
                     step_size = int(round(max_valid_st_idx / n_samples_per_patient))
                     return list(np.arange(0, max_valid_st_idx, step_size))
 
-            case SampleStrategy.RANDOM:
+            case "random":
 
                 def sample_fn(max_valid_st_idx: int) -> list[int]:
                     return list(np.random.choice(max_valid_st_idx, size=n_samples_per_patient))
 
-            case SampleStrategy.FROM_START:
+            case "from_start":
                 if n_samples_per_patient != 1:
                     raise ValueError(
                         f"Sampling with {sample_strategy} is only valid when n_samples_per_patient is 1"
@@ -42,7 +33,7 @@ class SampleSubsequencesFntr(ESDSTransformationFntr):
                 def sample_fn(max_valid_st_idx: int) -> list[int]:
                     return [0]
 
-            case SampleStrategy.TO_END:
+            case "to_end":
                 if n_samples_per_patient != 1:
                     raise ValueError(
                         f"Sampling with {sample_strategy} is only valid when n_samples_per_patient is 1"
@@ -52,9 +43,7 @@ class SampleSubsequencesFntr(ESDSTransformationFntr):
                     return [max_valid_st_idx]
 
             case _:
-                raise ValueError(
-                    f"sample_strategy {sample_strategy} invalid. Must be in {SampleStrategy.values()}"
-                )
+                raise ValueError(f"sample_strategy {sample_strategy} invalid.")
 
         self.sample_fn = sample_fn
 
