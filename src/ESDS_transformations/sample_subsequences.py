@@ -1,6 +1,5 @@
 import numpy as np
 
-
 from .base_class import BATCH_T, PT_DATA_T, ESDSTransformationFntr
 
 
