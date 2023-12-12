@@ -37,4 +37,4 @@ class NormalizeFntr(ESDSTransformationFntr):
         ]
         for e in patient["events"]:
             e["measurements"] = [self.normalize_measurement(m) for m in e["measurements"]]
-        return [patient]
+        return {k: [v] for k, v in patient.items()}

@@ -27,4 +27,4 @@ class TokenizeFntr(ESDSTransformationFntr):
         patient["static_measurements"] = self.tokenize_measurements(patient["static_measurements"])
         for e in patient["events"]:
             e["measurements"] = self.tokenize_measurements(e["measurements"])
-        return [patient]
+        return {k: [v] for k, v in patient.items()}

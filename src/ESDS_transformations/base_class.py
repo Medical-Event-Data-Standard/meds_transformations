@@ -33,4 +33,4 @@ class ESDSTransformationFntr(ABC):
             for k, v in pt.items():
                 out_batch[k].extend(v)
 
-        return out_batch
+        return dict(out_batch)

@@ -58,8 +58,6 @@ class TensorizeFntr(ESDSTransformationFntr):
     def tensorize_subj_no_pad(self, subj: PT_DATA_T) -> PT_DATA_T:
         out_subj = {}
 
-        set(subj.keys()) - self.DYNAMIC_KEYS
-
         static_ids, static_values, static_values_mask = self.tensorize_measurements(
             subj["static_measurements"]
         )
@@ -68,47 +66,37 @@ class TensorizeFntr(ESDSTransformationFntr):
         out_subj["static_values_mask"] = static_values_mask
 
         for k in set(subj.keys()) - {"events", "subject_id", "static_measurements"}:
+            if subj[k] is None:
+                raise ValueError(f"Can't tensorize `None` value {subj[k]} at `subj[{k}]`")
             out_subj[k] = torch.tensor(subj[k])
 
         time = []
         dynamic_ids = []
         dynamic_values = []
         dynamic_values_mask = []
-        time_derived_ids = []
-        time_derived_values = []
-        time_derived_values_mask = []
 
-        st_time = subj["events"][0]["datetime"]
+        st_time = subj["events"][0]["time"]
 
         other_per_event = defaultdict(list)
 
         for event in subj["events"]:
-            time.append((event["datetime"] - st_time).total_seconds() / 60.0)
+            time.append((event["time"] - st_time).total_seconds() / 60.0)
             i, v, m = self.tensorize_measurements(event["measurements"])
             dynamic_ids.append(i)
             dynamic_values.append(v)
             dynamic_values_mask.append(m)
 
-            covered_keys = {"datetime", "measurements"}
-
-            if "time_derived_measurements" in event:
-                i, v, m = self.tensorize_measurements(event["time_derived_measurements"])
-                time_derived_ids.append(i)
-                time_derived_values.append(v)
-                time_derived_values_mask.append(m)
-                covered_keys.add("time_derived_measurements")
+            covered_keys = {"time", "measurements"}
 
             for k in set(event.keys()) - covered_keys:
+                if event[k] is None:
+                    raise ValueError(f"Can't tensorize `None` value {event[k]} at `event[{k}]`")
                 other_per_event[k].append(event[k])
 
         out_subj["time"] = torch.FloatTensor(time)
         out_subj["dynamic_ids"] = dynamic_ids
         out_subj["dynamic_values"] = dynamic_values
         out_subj["dynamic_values_mask"] = dynamic_values_mask
-
-        out_subj["time_derived_ids"] = time_derived_ids
-        out_subj["time_derived_values"] = time_derived_values
-        out_subj["time_derived_values_mask"] = time_derived_values_mask
 
         for k, v in other_per_event.items():
             out_subj[f"dynamic_{k}"] = torch.tensor(v)
@@ -119,7 +107,6 @@ class TensorizeFntr(ESDSTransformationFntr):
         tensorized_subj = self.tensorize_subj_no_pad(subj)
 
         dynamic_keys = [k for k in tensorized_subj.keys() if k.startswith("dynamic_")]
-        time_derived_keys = [k for k in tensorized_subj.keys() if k.startswith("time_derived_")]
 
         L = self.pad_sequences_to - len(tensorized_subj["time"])
         tensorized_subj["event_mask"] = torch.BoolTensor(
@@ -127,13 +114,20 @@ class TensorizeFntr(ESDSTransformationFntr):
         )
         tensorized_subj["time"] = torch.nn.functional.pad(tensorized_subj["time"], (0, L), value=0)
 
-        for k in dynamic_keys + time_derived_keys:
-            tensorized_subj[k] = torch.nn.functional.pad(
-                torch.cat([T.unsqueeze(0) for T in tensorized_subj[k]]),
-                (0, L),
-                value=0,
-            )
+        for k in dynamic_keys:
+            try:
+                max_len = max(len(T) for T in tensorized_subj[k])
+                padded_dynamic_Ts = [
+                    torch.nn.functional.pad(T, (0, max_len - len(T)), value=0) for T in tensorized_subj[k]
+                ]
+                tensorized_subj[k] = torch.nn.functional.pad(
+                    torch.cat([T.unsqueeze(0) for T in padded_dynamic_Ts]),
+                    (0, L),
+                    value=0,
+                )
+            except Exception as e:
+                raise RuntimeError(f"Error while padding {k}") from e
         return tensorized_subj
 
     def __transform_patient__(self, patient: PT_DATA_T) -> BATCH_T:
-        return {k: [v] for k, v in self.tensorize_subj(patient).items()}
+        return {k: [v] for k, v in self.tensorize_subject(patient).items()}
