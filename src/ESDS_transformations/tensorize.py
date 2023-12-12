@@ -65,7 +65,7 @@ class TensorizeFntr(ESDSTransformationFntr):
         out_subj["static_values"] = static_values
         out_subj["static_values_mask"] = static_values_mask
 
-        for k in set(subj.keys()) - {"events", "subject_id", "static_measurements"}:
+        for k in set(subj.keys()) - {"events", "patient_id", "static_measurements"}:
             if subj[k] is None:
                 raise ValueError(f"Can't tensorize `None` value {subj[k]} at `subj[{k}]`")
             out_subj[k] = torch.tensor(subj[k])
