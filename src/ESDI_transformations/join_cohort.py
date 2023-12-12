@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from .base_class import BATCH_T, PT_DATA_T, ESDSTransformationFntr
+from .base_class import BATCH_T, PT_DATA_T, ESDITransformationFntr
 
 
-class JoinCohortFntr(ESDSTransformationFntr):
+class JoinCohortFntr(ESDITransformationFntr):
     """Join a dataset to a cohort with task labels."""
 
     def __init__(self, cohort_df: pl.DataFrame | pl.LazyFrame | pd.DataFrame | Path | str, **kwargs):

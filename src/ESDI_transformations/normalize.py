@@ -4,10 +4,10 @@ from typing import Any
 
 import numpy as np
 
-from .base_class import BATCH_T, PT_DATA_T, ESDSTransformationFntr
+from .base_class import BATCH_T, PT_DATA_T, ESDITransformationFntr
 
 
-class NormalizeFntr(ESDSTransformationFntr):
+class NormalizeFntr(ESDITransformationFntr):
     """Join a dataset to a cohort with task labels."""
 
     def __init__(self, norm_params: dict[str, tuple[float, float]], **kwargs):

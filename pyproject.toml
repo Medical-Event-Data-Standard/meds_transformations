@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ESDS_transformations"
+name = "ESDI_transformations"
 version = "0.0.1"
 authors = [
   { name="Matthew McDermott", email="mattmcdermott8@gmail.com" },
 ]
-description = "Sample transformations for ESDS data"
+description = "Sample transformations for ESDI data"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -22,5 +22,5 @@ dependencies = ["torch", "numpy", "pandas", "polars"]
 dev = ["pre-commit"]
 
 [project.urls]
-Homepage = "https://github.com/Event-Stream-Data-Standard/ESDS_transformations"
-Issues = "https://github.com/Event-Stream-Data-Standard/ESDS_transformations/issues"
+Homepage = "https://github.com/Event-Stream-Data-Standard/ESDI_transformations"
+Issues = "https://github.com/Event-Stream-Data-Standard/ESDI_transformations/issues"

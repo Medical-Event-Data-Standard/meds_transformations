@@ -1,9 +1,9 @@
 import numpy as np
 
-from .base_class import BATCH_T, PT_DATA_T, ESDSTransformationFntr
+from .base_class import BATCH_T, PT_DATA_T, ESDITransformationFntr
 
 
-class SampleSubsequencesFntr(ESDSTransformationFntr):
+class SampleSubsequencesFntr(ESDITransformationFntr):
     def __init__(
         self,
         max_seq_len: int = 256,

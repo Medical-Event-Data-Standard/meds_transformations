@@ -3,10 +3,10 @@ from typing import Any
 
 import torch
 
-from .base_class import BATCH_T, PT_DATA_T, ESDSTransformationFntr
+from .base_class import BATCH_T, PT_DATA_T, ESDITransformationFntr
 
 
-class TensorizeFntr(ESDSTransformationFntr):
+class TensorizeFntr(ESDITransformationFntr):
     def __init__(
         self,
         code_idxmap: dict[str, int],
