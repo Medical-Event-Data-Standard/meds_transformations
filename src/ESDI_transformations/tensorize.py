@@ -1,8 +1,8 @@
 from collections import defaultdict
 from typing import Any
 
-import torch
 import numpy as np
+import torch
 
 from .base_class import BATCH_T, PT_DATA_T, ESDITransformationFntr
 
@@ -64,6 +64,8 @@ class TensorizeFntr(ESDITransformationFntr):
             True
             >>> TensorizeFntr.is_present_float(np.float32(0.0))
             True
+            >>> TensorizeFntr.is_present_float(np.uint32(3))
+            True
             >>> TensorizeFntr.is_present_float(None)
             False
             >>> TensorizeFntr.is_present_float(np.NaN)
@@ -82,7 +84,7 @@ class TensorizeFntr(ESDITransformationFntr):
                 return not (np.isnan(v) or np.isinf(v))
             case _:
                 try:
-                    return is_present_float(float(v))
+                    return TensorizeFntr.is_present_float(float(v))
                 except Exception:
                     return False
 
@@ -127,7 +129,8 @@ class TensorizeFntr(ESDITransformationFntr):
     def tensorize_measurements_pad(
         self, measurements: list[dict[str, Any]]
     ) -> tuple[torch.LongTensor, torch.FloatTensor, torch.BoolTensor]:
-        """Tensorizes a list of measurements into codes, values, and values-mask tensors, padded to max length
+        """Tensorizes a list of measurements into codes, values, and values-mask tensors, padded to max
+        length.
 
         Args:
             measurements: A sequence of measurements in dictionary form.
@@ -163,7 +166,7 @@ class TensorizeFntr(ESDITransformationFntr):
         return codes, vals, vals_mask
 
     def tensorize_subj_no_pad(self, subj: PT_DATA_T) -> PT_DATA_T:
-        """Tensorizes a full subject into a tensors of time_deltas and nested codes, values, and values-mask.
+        """Tensorizes a subject into padded tensors of time_deltas & nested codes, values, and values-masks.
 
         Args:
             subj: A subject in dictionary form.
@@ -176,7 +179,7 @@ class TensorizeFntr(ESDITransformationFntr):
           * ``time_delta``: A tensor of the time deltas between measurements. A delta encoding is used to
             avoid numerical overflow issues for long time series.
           * ``dynamic_ids``: A nested, _non-padded_ tensor of the dynamic code indices.
-          * ``dynamic_values``: A nested, _non-padded_ tensor of the numeric values associated with dynamic 
+          * ``dynamic_values``: A nested, _non-padded_ tensor of the numeric values associated with dynamic
             measurements.
           * ``dynamic_values_mask``: A nested, _non-padded_ tensor of whether or not numeric values were
             present for dynamic measurements.
@@ -282,15 +285,114 @@ class TensorizeFntr(ESDITransformationFntr):
         return out_subj
 
     def tensorize_subj_pad(self, subj: PT_DATA_T) -> PT_DATA_T:
+        """Tensorizes a subject into padded tensors of time_deltas & nested codes, values, and values-masks.
+
+        Args:
+            subj: A subject in dictionary form.
+
+        Returns: A dictionary with the following keys and values:
+          * ``static_ids``: A tensor of the static code indices.
+            This may or may not be padded to a normalized length, depending on `self.pad_measurements_to`.
+          * ``static_values``: A tensor of the numeric values associated with static measurements.
+            This may or may not be padded to a normalized length, depending on `self.pad_measurements_to`.
+          * ``static_values_mask``: A tensor of booleans indicating whether numeric static values were
+            present.
+            This may or may not be padded to a normalized length, depending on `self.pad_measurements_to`.
+          * ``time_delta``: A tensor of the time deltas between measurements. A delta encoding is used to
+            avoid numerical overflow issues for long time series.
+            This will be padded to `self.pad_sequences_to`.
+          * ``event_mask``: A boolean tensor indicating whether or not an event was present at a given
+            sequence index.
+          * ``dynamic_ids``: A padded tensor of the dynamic code indices.
+            The outer tensor will be padded to `self.pad_sequences_to`.
+            The inner tensor may or may not be padded to a normalized length, depending on
+            `self.pad_measurements_to`.
+          * ``dynamic_values``: A padded tensor of the numeric values associated with dynamic
+            measurements.
+            The outer tensor will be padded to `self.pad_sequences_to`.
+            The inner tensor may or may not be padded to a normalized length, depending on
+            `self.pad_measurements_to`.
+          * ``dynamic_values_mask``: A padded tensor of whether or not numeric values were
+            present for dynamic measurements.
+            The outer tensor will be padded to `self.pad_sequences_to`.
+            The inner tensor may or may not be padded to a normalized length, depending on
+            `self.pad_measurements_to`.
+
+        Examples:
+            >>> from datetime import datetime
+            >>> fntr = TensorizeFntr({"A": 1, "B": 2, "D": 3}, pad_sequences_to=4, pad_measurements_to=4)
+            >>> out_subj = fntr.tensorize_subj_pad({
+            ...     "patient_id": 3,
+            ...     "static_measurements": [
+            ...         {"code": "A"},
+            ...         {"code": "B"},
+            ...         {"code": "C", "numeric_value": 3.2},
+            ...     ],
+            ...     "events": [
+            ...         {
+            ...             "time": datetime(2023, 1, 1),
+            ...             "measurements": [
+            ...                 {"code": "A", "numeric_value": 0},
+            ...                 {"code": "D", "numeric_value": 3.0},
+            ...                 {"code": "B", "numeric_value": None},
+            ...                 {"code": "A", "numeric_value": 10},
+            ...             ],
+            ...         }, {
+            ...             "time": datetime(2023, 1, 2),
+            ...             "measurements": [],
+            ...         }, {
+            ...             "time": datetime(2023, 1, 5),
+            ...             "measurements": [
+            ...                 {"code": "A", "numeric_value": 0},
+            ...                 {"code": "D", "numeric_value": 1.0},
+            ...             ],
+            ...         },
+            ...     ],
+            ... })
+            >>> assert (
+            ...     set(out_subj.keys()) ==
+            ...     {
+            ...         "static_ids", "static_values", "static_values_mask", "time_delta", "dynamic_ids",
+            ...         "dynamic_values", "dynamic_values_mask", "event_mask",
+            ...     }
+            ... ), f"Keys are wrong! Got {out_subj.keys()}"
+            >>> out_subj["static_ids"]
+            tensor([1, 2, 0, 0])
+            >>> out_subj["static_values"]
+            tensor([0.0000, 0.0000, 3.2000, 0.0000])
+            >>> out_subj["static_values_mask"]
+            tensor([False, False,  True, False])
+            >>> out_subj["time_delta"]
+            tensor([   0., 1440., 4320.,    0.])
+            >>> out_subj["event_mask"]
+            tensor([ True,  True,  True, False])
+            >>> out_subj["dynamic_ids"]
+            tensor([[1, 3, 2, 1],
+                    [0, 0, 0, 0],
+                    [1, 3, 0, 0],
+                    [0, 0, 0, 0]])
+            >>> out_subj["dynamic_values"]
+            tensor([[ 0.,  3.,  0., 10.],
+                    [ 0.,  0.,  0.,  0.],
+                    [ 0.,  1.,  0.,  0.],
+                    [ 0.,  0.,  0.,  0.]])
+            >>> out_subj["dynamic_values_mask"]
+            tensor([[ True,  True, False,  True],
+                    [False, False, False, False],
+                    [ True,  True, False, False],
+                    [False, False, False, False]])
+        """
         tensorized_subj = self.tensorize_subj_no_pad(subj)
 
         dynamic_keys = [k for k in tensorized_subj.keys() if k.startswith("dynamic_")]
 
-        L = self.pad_sequences_to - len(tensorized_subj["time"])
+        L = self.pad_sequences_to - len(tensorized_subj["time_delta"])
         tensorized_subj["event_mask"] = torch.BoolTensor(
-            ([True] * len(tensorized_subj["time"])) + ([False] * L)
+            ([True] * len(tensorized_subj["time_delta"])) + ([False] * L)
         )
-        tensorized_subj["time"] = torch.nn.functional.pad(tensorized_subj["time"], (0, L), value=0)
+        tensorized_subj["time_delta"] = torch.nn.functional.pad(
+            tensorized_subj["time_delta"], (0, L), value=0
+        )
 
         for k in dynamic_keys:
             try:
@@ -300,7 +402,7 @@ class TensorizeFntr(ESDITransformationFntr):
                 ]
                 tensorized_subj[k] = torch.nn.functional.pad(
                     torch.cat([T.unsqueeze(0) for T in padded_dynamic_Ts]),
-                    (0, L),
+                    (0, 0, 0, L),
                     value=0,
                 )
             except Exception as e:
