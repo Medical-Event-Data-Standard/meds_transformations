@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ESDI_transformations"
+name = "MEDS_transformations"
 version = "0.0.1"
 authors = [
   { name="Matthew McDermott", email="mattmcdermott8@gmail.com" },
 ]
-description = "Sample transformations for ESDI data"
+description = "Sample transformations for MEDS data"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -23,5 +23,5 @@ dev = ["pre-commit"]
 tests = ["pytest", "rootutils"]
 
 [project.urls]
-Homepage = "https://github.com/Event-Stream-Data-Standard/ESDI_transformations"
-Issues = "https://github.com/Event-Stream-Data-Standard/ESDI_transformations/issues"
+Homepage = "https://github.com/Event-Stream-Data-Standard/MEDS_transformations"
+Issues = "https://github.com/Event-Stream-Data-Standard/MEDS_transformations/issues"
