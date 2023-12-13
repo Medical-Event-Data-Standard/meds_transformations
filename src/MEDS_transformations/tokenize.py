@@ -2,10 +2,10 @@
 
 from typing import Any
 
-from .base_class import BATCH_T, PT_DATA_T, ESDITransformationFntr
+from .base_class import BATCH_T, PT_DATA_T, MEDSTransformationFntr
 
 
-class TokenizeFntr(ESDITransformationFntr):
+class TokenizeFntr(MEDSTransformationFntr):
     """Join a dataset to a cohort with task labels."""
 
     def __init__(self, vocab: list[str], **kwargs):

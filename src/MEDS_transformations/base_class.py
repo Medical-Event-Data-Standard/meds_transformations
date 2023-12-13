@@ -1,4 +1,4 @@
-"""A base class underwriting other ESDI transformation functions."""
+"""A base class underwriting other MEDS transformation functions."""
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -8,8 +8,8 @@ PT_DATA_T = dict[str, Any]
 BATCH_T = dict[str, list[PT_DATA_T]]
 
 
-class ESDITransformationFntr(ABC):
-    """Base class for ESDI transformation functions."""
+class MEDSTransformationFntr(ABC):
+    """Base class for MEDS transformation functions."""
 
     DYNAMIC_KEYS = {"events"}
 

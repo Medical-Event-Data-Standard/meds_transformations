@@ -4,10 +4,10 @@ from typing import Any
 import numpy as np
 import torch
 
-from .base_class import BATCH_T, PT_DATA_T, ESDITransformationFntr
+from .base_class import BATCH_T, PT_DATA_T, MEDSTransformationFntr
 
 
-class TensorizeFntr(ESDITransformationFntr):
+class TensorizeFntr(MEDSTransformationFntr):
     def __init__(
         self,
         code_idxmap: dict[str, int],
