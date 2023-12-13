@@ -19,7 +19,18 @@ class TokenizeFntr(MEDSTransformationFntr):
         self.vocab = set(vocab)
 
     def tokenize_measurements(self, meas: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Normalize a single measurement."""
+        """Filter a list of measurements to only include those with codes in the vocabulary.
+
+        Args:
+            meas: A list of measurements in dictionary form.
+
+        Returns: The filtered list of input measurements based on the member variable ``vocab``.
+
+        Examples:
+            >>> fntr = TokenizeFntr(["foo", "bar", "baz"])
+            >>> fntr.tokenize_measurements([{"code": "foo"}, {"code": "woo"}, {"code": "baz"}])
+            [{'code': 'foo'}, {'code': 'baz'}]
+        """
         return [m for m in meas if m["code"] in self.vocab]
 
     def __transform_patient__(self, patient: PT_DATA_T) -> BATCH_T:
