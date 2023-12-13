@@ -20,6 +20,7 @@ dependencies = ["torch", "numpy", "pandas", "polars"]
 
 [project.optional-dependencies]
 dev = ["pre-commit"]
+tests = ["pytest", "rootutils"]
 
 [project.urls]
 Homepage = "https://github.com/Event-Stream-Data-Standard/ESDI_transformations"
